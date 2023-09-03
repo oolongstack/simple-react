@@ -32,12 +32,17 @@ function createDOM(VNode) {
       mount(props.children, dom);
     } else if (Array.isArray(props.children)) {
       mountArray(props.children, dom);
-    } else if (typeof props.children === "string") {
+    } else if (
+      typeof props.children === "string" ||
+      typeof props.children === "number"
+    ) {
       dom.appendChild(document.createTextNode(props.children));
     }
   }
   // 处理其他属性
   setPropsForDOM(dom, props);
+
+  VNode.dom = dom;
 
   return dom;
 }
@@ -54,6 +59,7 @@ function getDomByClassComponent(VNode) {
   let instance = new type(props);
   let renderVNode = instance.render();
   if (!renderVNode) return;
+  instance.oldVNode = renderVNode;
   return createDOM(renderVNode);
 }
 function setPropsForDOM(dom, VNodeProps = {}) {
@@ -74,17 +80,28 @@ function setPropsForDOM(dom, VNodeProps = {}) {
 
 function mountArray(children, dom) {
   if (!Array.isArray(children)) return;
-  // children.forEach((child) => {
-  //   mount(child, dom);
-  // });
 
   for (let i = 0; i < children.length; i++) {
     if (typeof children[i] === "object") {
       mount(children[i], dom);
-    } else if (typeof children[i] === "string") {
+    } else if (
+      typeof children[i] === "string" ||
+      typeof children[i] === "number"
+    ) {
       dom.appendChild(document.createTextNode(children[i]));
     }
   }
+}
+
+export function findDomByVNode(VNode) {
+  if (!VNode) return null;
+  if (VNode.dom) return VNode.dom;
+}
+
+export function updateDomTree(oldDOM, newVNode) {
+  const parentNode = oldDOM.parentNode;
+  parentNode.removeChild(oldDOM);
+  parentNode.appendChild(createDOM(newVNode));
 }
 
 const ReactDOM = {

@@ -6,13 +6,23 @@ class MyClassComponent extends React.Component {
   constructor(props) {
     super(props);
 
-    console.log(this.props);
+    this.state = {
+      count: 0,
+    };
+
+    setTimeout(() => {
+      this.setState({
+        count: 100,
+      });
+    }, 3000);
   }
   render() {
+    const { count } = this.state;
     return (
       <div>
         MyClassComponent <span>{this.props.name}</span>
-        {this.props.children}
+        {/* {this.props.children} */}
+        <div>count:{count}</div>
       </div>
     );
   }
