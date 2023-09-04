@@ -9,20 +9,26 @@ class MyClassComponent extends React.Component {
     this.state = {
       count: 0,
     };
-
-    setTimeout(() => {
-      this.setState({
-        count: 100,
-      });
-    }, 3000);
   }
   render() {
     const { count } = this.state;
     return (
-      <div>
+      <div
+        onClick={(e) => {
+          console.log("father e: ", e);
+          console.log("father click");
+        }}
+        style={{ color: "pink" }}
+      >
         MyClassComponent <span>{this.props.name}</span>
-        {/* {this.props.children} */}
-        <div>count:{count}</div>
+        <div
+          onClick={(e) => {
+            console.log("e: ", e);
+            this.setState({ count: count + 1 });
+          }}
+        >
+          count:{count}
+        </div>
       </div>
     );
   }
@@ -37,9 +43,8 @@ const element = (
   </div>
 );
 function MyFunctionComponent(props) {
-  console.log("props: ", props);
   return (
-    <div>
+    <div style={{ color: "blue" }}>
       MyFunctionComponent <span>{props.name}</span>
     </div>
   );

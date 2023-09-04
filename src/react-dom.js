@@ -1,6 +1,7 @@
 import { REACT_ELEMENT } from "./utils";
-
+import { addEvent } from "./event";
 function render(VNode, containerDOM) {
+  console.log("all VNode: ", VNode);
   // 将虚拟DOM转化为真实DOM
   // 真实DOM挂载到容器中
   mount(VNode, containerDOM);
@@ -39,6 +40,7 @@ function createDOM(VNode) {
       dom.appendChild(document.createTextNode(props.children));
     }
   }
+
   // 处理其他属性
   setPropsForDOM(dom, props);
 
@@ -68,6 +70,8 @@ function setPropsForDOM(dom, VNodeProps = {}) {
     if (key === "children") continue;
     if (/^on[A-Z].*/.test(key)) {
       // 处理事件
+
+      addEvent(dom, key.toLowerCase(), VNodeProps[key]);
     } else if (key === "style") {
       Object.keys(VNodeProps[key]).forEach((styleKey) => {
         dom.style[styleKey] = VNodeProps[key][styleKey];
