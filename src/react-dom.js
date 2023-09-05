@@ -53,8 +53,8 @@ function createDOM(VNode) {
 }
 
 function getDomByFunctionComponent(VNode) {
-  let { type, props } = VNode;
-  let renderVNode = type(props);
+  let { type, props, ref } = VNode;
+  let renderVNode = type(props, ref);
   if (!renderVNode) return;
   return createDOM(renderVNode);
 }

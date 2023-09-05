@@ -12,6 +12,20 @@ class OtherClassComp extends React.Component {
   }
 }
 
+function OtherFunction(props, ref) {
+  console.log("ref: ", ref);
+  console.log("props: ", props);
+  const func = () => {
+    console.log(ref.current);
+  };
+  return (
+    <div>
+      otherfunction <input type="text" ref={ref} />
+      <button onClick={() => func()}>fun click</button>
+    </div>
+  );
+}
+
 class MyClassComponent extends React.Component {
   constructor(props) {
     super(props);
@@ -22,10 +36,13 @@ class MyClassComponent extends React.Component {
 
     this.inputRef = React.createRef();
     this.componentRef = React.createRef();
+    this.functionRef = React.createRef();
   }
   handleInputClick() {
     this.inputRef.current.focus();
     this.componentRef.current.otherFunction();
+
+    this.functionRef.current.focus();
   }
   render() {
     const { count } = this.state;
@@ -48,6 +65,7 @@ class MyClassComponent extends React.Component {
         </div>
         <input type="text" ref={this.inputRef} />
         <button onClick={() => this.handleInputClick()}>click</button>
+        <OtherFunction ref={this.functionRef} />
         <OtherClassComp ref={this.componentRef} />
       </div>
     );
