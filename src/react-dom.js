@@ -13,7 +13,7 @@ function mount(VNode, containerDOM) {
 }
 
 function createDOM(VNode) {
-  const { type, props } = VNode;
+  const { type, props, ref } = VNode;
   let dom;
   if (
     typeof type === "function" &&
@@ -46,6 +46,9 @@ function createDOM(VNode) {
 
   VNode.dom = dom;
 
+  // 给原生标签的ref赋值
+  ref && (ref.current = dom);
+
   return dom;
 }
 
@@ -57,10 +60,12 @@ function getDomByFunctionComponent(VNode) {
 }
 
 function getDomByClassComponent(VNode) {
-  let { type, props } = VNode;
+  let { type, props, ref } = VNode;
   let instance = new type(props);
+
+  ref && (ref.current = instance);
   let renderVNode = instance.render();
-  if (!renderVNode) return;
+  if (!renderVNode) returnss;
   instance.oldVNode = renderVNode;
   return createDOM(renderVNode);
 }

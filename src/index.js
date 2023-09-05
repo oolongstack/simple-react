@@ -2,6 +2,16 @@
 import React from "./react";
 // import ReactDOM from "react-dom";
 import ReactDOM from "./react-dom";
+
+class OtherClassComp extends React.Component {
+  otherFunction() {
+    console.log("otherFunction");
+  }
+  render() {
+    return <div>OtherClassComp</div>;
+  }
+}
+
 class MyClassComponent extends React.Component {
   constructor(props) {
     super(props);
@@ -9,6 +19,13 @@ class MyClassComponent extends React.Component {
     this.state = {
       count: 0,
     };
+
+    this.inputRef = React.createRef();
+    this.componentRef = React.createRef();
+  }
+  handleInputClick() {
+    this.inputRef.current.focus();
+    this.componentRef.current.otherFunction();
   }
   render() {
     const { count } = this.state;
@@ -20,7 +37,7 @@ class MyClassComponent extends React.Component {
         }}
         style={{ color: "pink" }}
       >
-        MyClassComponent <span>{this.props.name}</span>
+        props.name <span>{this.props.name}</span>
         <div
           onClick={(e) => {
             console.log("e: ", e);
@@ -29,6 +46,9 @@ class MyClassComponent extends React.Component {
         >
           count:{count}
         </div>
+        <input type="text" ref={this.inputRef} />
+        <button onClick={() => this.handleInputClick()}>click</button>
+        <OtherClassComp ref={this.componentRef} />
       </div>
     );
   }
