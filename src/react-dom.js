@@ -1,4 +1,4 @@
-import { REACT_ELEMENT } from "./utils";
+import { REACT_ELEMENT, REACT_FORWARD_REF } from "./utils";
 import { addEvent } from "./event";
 function render(VNode, containerDOM) {
   console.log("all VNode: ", VNode);
@@ -15,6 +15,8 @@ function mount(VNode, containerDOM) {
 function createDOM(VNode) {
   const { type, props, ref } = VNode;
   let dom;
+
+  // 类组件
   if (
     typeof type === "function" &&
     VNode.$$typeof === REACT_ELEMENT &&
@@ -22,8 +24,13 @@ function createDOM(VNode) {
   ) {
     return getDomByClassComponent(VNode);
   }
+  // 函数组件
   if (typeof type === "function" && VNode.$$typeof === REACT_ELEMENT) {
     return getDomByFunctionComponent(VNode);
+  }
+  // 被forwardRef包裹的函数组件
+  if (type && type.$$typeof === REACT_FORWARD_REF) {
+    return getDomByForwardRefFunction(VNode);
   }
   if (type && VNode.$$typeof === REACT_ELEMENT) {
     dom = document.createElement(type);
@@ -53,8 +60,8 @@ function createDOM(VNode) {
 }
 
 function getDomByFunctionComponent(VNode) {
-  let { type, props, ref } = VNode;
-  let renderVNode = type(props, ref);
+  let { type, props } = VNode;
+  let renderVNode = type(props);
   if (!renderVNode) return;
   return createDOM(renderVNode);
 }
@@ -69,6 +76,17 @@ function getDomByClassComponent(VNode) {
   instance.oldVNode = renderVNode;
   return createDOM(renderVNode);
 }
+function getDomByForwardRefFunction(VNode) {
+  console.log("VNode: ", VNode);
+  const { type, props, ref } = VNode;
+
+  const { render } = type;
+
+  const renderVnode = render(props, ref);
+  if (!renderVnode) return null;
+  return createDOM(renderVnode);
+}
+
 function setPropsForDOM(dom, VNodeProps = {}) {
   if (!dom) return;
   for (const key in VNodeProps) {

@@ -12,11 +12,9 @@ class OtherClassComp extends React.Component {
   }
 }
 
-function OtherFunction(props, ref) {
-  console.log("ref: ", ref);
-  console.log("props: ", props);
+const OtherFunction = React.forwardRef(function (props, ref) {
   const func = () => {
-    console.log(ref.current);
+    console.log(ref);
   };
   return (
     <div>
@@ -24,7 +22,7 @@ function OtherFunction(props, ref) {
       <button onClick={() => func()}>fun click</button>
     </div>
   );
-}
+});
 
 class MyClassComponent extends React.Component {
   constructor(props) {
