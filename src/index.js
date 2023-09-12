@@ -86,5 +86,33 @@ function MyFunctionComponent(props) {
   );
 }
 
-console.log("element: ", element);
-ReactDOM.render(element, document.getElementById("root"));
+class DiffComponent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      arr: [1, 2, 3, 4],
+    };
+  }
+
+  diff() {
+    this.setState({
+      arr: [...this.state.arr, 5],
+    });
+  }
+  render() {
+    return (
+      <div>
+        <div>
+          {this.state.arr.map((item) => {
+            return <div key={item}>{item}</div>;
+          })}
+        </div>
+        <div>
+          <button onClick={() => this.diff()}>diff</button>
+        </div>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<DiffComponent />, document.getElementById("root"));

@@ -69,7 +69,8 @@ function getDomByClassComponent(VNode) {
 
   ref && (ref.current = instance);
   let renderVNode = instance.render();
-  if (!renderVNode) returnss;
+  if (!renderVNode) return;
+  VNode.classInstacne = instance;
   instance.oldVNode = renderVNode;
   return createDOM(renderVNode);
 }
@@ -116,9 +117,110 @@ export function findDomByVNode(VNode) {
 }
 
 export function updateDomTree(oldVNode, newVNode, oldDOM) {
+  console.log("newVNode: ", newVNode);
+  console.log("oldVNode: ", oldVNode);
   const parentNode = oldDOM.parentNode;
-  parentNode.removeChild(oldDOM);
-  parentNode.appendChild(createDOM(newVNode));
+  const typeMap = {
+    NO_OPERATE: !oldVNode && !newVNode,
+    ADD: !oldVNode && newVNode,
+    DELETE: oldVNode && !newVNode,
+    REPLACE: oldVNode && newVNode && oldVNode.type !== newVNode.type,
+  };
+  const UPDATE_TYPE = Object.keys(typeMap).filter((key) => typeMap[key])[0];
+  switch (UPDATE_TYPE) {
+    case "NO_OPERATE":
+      break;
+    case "ADD":
+      // mount(newVNode, parentNode);
+      parentNode.appendChild(createDOM(newVNode));
+      break;
+    case "DELETE":
+      // parentNode.removeChild(oldDOM);
+      removeVNode(oldVNode);
+      break;
+    case "REPLACE":
+      removeVNode(oldVNode);
+      parentNode.appendChild(createDOM(newVNode));
+      break;
+    default:
+      // 新节点存在，旧节点也存在，且type一样
+      deepDOMDiff(oldVNode, newVNode);
+      break;
+  }
+}
+
+function removeVNode(VNode) {
+  const currentDOM = findDomByVNode(VNode);
+  currentDOM && currentDOM.remove();
+}
+
+function deepDOMDiff(oldVNode, newVNode) {
+  const diffTypeMap = {
+    ORIGIN_NODE: typeof oldVNode.type === "string", // div 等等
+    CLASS_COMPONENT:
+      typeof oldVNode.type === "function" && oldVNode.type.IS_CLASS_COMPONENT, // 类组件
+    FUNCTION_COMPONENT: typeof oldVNode.type === "function", // 函数组件
+    TEXT: oldVNode.type === REACT_TEXT,
+  };
+
+  const DIFF_TYPE = Object.keys(diffTypeMap).filter(
+    (key) => diffTypeMap[key]
+  )[0];
+
+  switch (DIFF_TYPE) {
+    case "ORIGIN_NODE":
+      const currentDOM = (newVNode.dom = findDomByVNode(oldVNode));
+      // 更新属性
+      setPropsForDOM(currentDOM, newVNode.props);
+      // 更新子节点（核心）
+      updateChildren(
+        currentDOM,
+        oldVNode.props.children,
+        newVNode.props.children
+      );
+      break;
+    case "CLASS_COMPONENT":
+      updateClassComponent(oldVNode, newVNode);
+      break;
+    case "FUNCTION_COMPONENT":
+      updateFunctionComponent(oldVNode, newVNode);
+      break;
+    case "TEXT":
+      newVNode.dom = findDomByVNode(oldVNode);
+      newVNode.dom.textContent = newVNode.props.text;
+      break;
+    default:
+      break;
+  }
+}
+
+function updateClassComponent(oldVNode, newVNode) {
+  const classInstacne = (newVNode.classInstacne = oldVNode.classInstacne);
+  classInstacne.updater.lanchUpdate();
+}
+function updateFunctionComponent(oldVNode, newVNode) {
+  const oldDOM = findDomByVNode(oldVNode);
+  if (!oldDOM) return;
+  const { type, props } = newVNode;
+  const newRenderVNode = type(props);
+  updateDomTree(oldVNode.oldRenderVNode, newRenderVNode, oldDOM);
+  newVNode.oldRenderVNode = newRenderVNode;
+}
+
+// dom-diff
+function updateChildren(parentDOM, oldVNodeChildren, newVNodeChildren) {
+  oldVNodeChildren = (
+    Array.isArray(oldVNodeChildren) ? oldVNodeChildren : [oldVNodeChildren]
+  ).filter(Boolean);
+
+  newVNodeChildren = (
+    Array.isArray(newVNodeChildren) ? newVNodeChildren : [newVNodeChildren]
+  ).filter(Boolean);
+
+  const lastNotChangedIndex = -1;
+  const oldKeyChildMap = {};
+
+  debugger;
 }
 
 const ReactDOM = {
