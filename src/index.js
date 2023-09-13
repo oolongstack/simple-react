@@ -90,13 +90,13 @@ class DiffComponent extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      arr: [1, 2, 3, 4],
+      arr: ["a", "b", "c", "d", "e"],
     };
   }
 
   diff() {
     this.setState({
-      arr: [...this.state.arr, 5],
+      arr: ["c", "b", "e", "f", "a"],
     });
   }
   render() {

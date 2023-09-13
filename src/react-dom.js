@@ -1,4 +1,10 @@
-import { REACT_ELEMENT, REACT_FORWARD_REF, REACT_TEXT } from "./utils";
+import {
+  CREATE,
+  MOVE,
+  REACT_ELEMENT,
+  REACT_FORWARD_REF,
+  REACT_TEXT,
+} from "./utils";
 import { addEvent } from "./event";
 function render(VNode, containerDOM) {
   console.log("all VNode: ", VNode);
@@ -217,10 +223,90 @@ function updateChildren(parentDOM, oldVNodeChildren, newVNodeChildren) {
     Array.isArray(newVNodeChildren) ? newVNodeChildren : [newVNodeChildren]
   ).filter(Boolean);
 
-  const lastNotChangedIndex = -1;
+  let lastNotChangedIndex = -1;
   const oldKeyChildMap = {};
 
-  debugger;
+  oldVNodeChildren.forEach((oldVNode, index) => {
+    const oldKey = oldVNode.key ? oldVNode.key : index;
+    oldKeyChildMap[oldKey] = oldVNode;
+  });
+
+  const actions = [];
+  // old
+  // a b c d e
+  // new
+  // c b e f a
+
+  newVNodeChildren.forEach((newVNode, index) => {
+    newVNode.index = index;
+    const newKey = newVNode.key ? newVNode.key : index;
+    const oldVNode = oldKeyChildMap[newKey];
+    // 如果这个节点在老的里面有
+    if (oldVNode) {
+      deepDOMDiff(oldVNode, newVNode);
+      if (oldVNode.index < lastNotChangedIndex) {
+        // 移动
+        actions.push({
+          type: MOVE,
+          oldVNode,
+          newVNode,
+          index,
+        });
+      }
+      delete oldKeyChildMap[newKey];
+      lastNotChangedIndex = Math.max(lastNotChangedIndex, oldVNode.index);
+    } else {
+      // 在这个index需要创建这么一个节点
+      actions.push({
+        type: CREATE,
+        newVNode,
+        index,
+      });
+    }
+  });
+
+  // 准备移动的节点
+  const VNodeToMove = actions
+    .filter(({ type }) => type === MOVE)
+    .map((action) => action.oldVNode);
+
+  // 能复用的都被删掉了，剩余的都是可被删除的
+  const VNodeToDelete = Object.values(oldKeyChildMap);
+
+  console.log(actions);
+
+  // 先删除
+  VNodeToMove.concat(VNodeToDelete).forEach((oldVNode) => {
+    const currentDom = findDomByVNode(oldVNode);
+    currentDom.remove();
+  });
+
+  actions.forEach((action) => {
+    const { type, index, oldVNode, newVNode } = action;
+
+    // 拿到现在的childNodes
+    const childNodes = parentDOM.childNodes;
+
+    const childNode = childNodes[index];
+
+    const getDomForInsert = () => {
+      if (type === CREATE) {
+        return createDOM(newVNode);
+      }
+      if (type === MOVE) {
+        return findDomByVNode(oldVNode);
+      }
+    };
+
+    // 原来这个位置已经有节点了
+    if (childNode) {
+      parentDOM.insertBefore(getDomForInsert(), childNode);
+    } else {
+      parentDOM.appendChild(getDomForInsert());
+    }
+  });
+
+  // debugger;
 }
 
 const ReactDOM = {
