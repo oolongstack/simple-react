@@ -72,13 +72,19 @@ function getDomByFunctionComponent(VNode) {
 function getDomByClassComponent(VNode) {
   let { type, props, ref } = VNode;
   let instance = new type(props);
+  console.log("instance: ", instance);
 
   ref && (ref.current = instance);
   let renderVNode = instance.render();
   if (!renderVNode) return;
   VNode.classInstacne = instance;
   instance.oldVNode = renderVNode;
-  return createDOM(renderVNode);
+  const dom = createDOM(renderVNode);
+
+  if (instance.componentDidMount) {
+    instance.componentDidMount();
+  }
+  return dom;
 }
 function getDomByForwardRefFunction(VNode) {
   const { type, props, ref } = VNode;
@@ -123,8 +129,6 @@ export function findDomByVNode(VNode) {
 }
 
 export function updateDomTree(oldVNode, newVNode, oldDOM) {
-  console.log("newVNode: ", newVNode);
-  console.log("oldVNode: ", oldVNode);
   const parentNode = oldDOM.parentNode;
   const typeMap = {
     NO_OPERATE: !oldVNode && !newVNode,
@@ -157,7 +161,13 @@ export function updateDomTree(oldVNode, newVNode, oldDOM) {
 
 function removeVNode(VNode) {
   const currentDOM = findDomByVNode(VNode);
+
   currentDOM && currentDOM.remove();
+  // 卸载前的回调
+
+  if (VNode.classInstacne && VNode.classInstacne.componentWillUnmount) {
+    VNode.classInstacne.componentWillUnmount();
+  }
 }
 
 function deepDOMDiff(oldVNode, newVNode) {
@@ -272,8 +282,6 @@ function updateChildren(parentDOM, oldVNodeChildren, newVNodeChildren) {
 
   // 能复用的都被删掉了，剩余的都是可被删除的
   const VNodeToDelete = Object.values(oldKeyChildMap);
-
-  console.log(actions);
 
   // 先删除
   VNodeToMove.concat(VNodeToDelete).forEach((oldVNode) => {

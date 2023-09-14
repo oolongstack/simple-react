@@ -115,4 +115,60 @@ class DiffComponent extends React.Component {
   }
 }
 
-ReactDOM.render(<DiffComponent />, document.getElementById("root"));
+class LifeCycleComponent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      date: new Date(),
+      count: 0,
+    };
+  }
+
+  // 挂载
+  componentDidMount() {
+    console.log("componentDidMount");
+    // this.timer = setInterval(() => {
+    //   this.tick();
+    // }, 1000);
+  }
+
+  // 组件从dom树上卸载前调用
+  componentWillUnmount() {
+    console.log("componentWillUnmount");
+    clearInterval(this.timer);
+  }
+
+  // 更新
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    console.log("componentDidUpdate");
+    console.log("prevProps: ", prevProps);
+    console.log("prevState: ", prevState);
+    console.log("snapshot: ", snapshot);
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {}
+
+  tick() {
+    this.setState({
+      date: new Date(),
+    });
+  }
+  countPlus() {
+    this.setState({
+      ...this.state,
+      count: this.state.count + 1,
+    });
+  }
+
+  render() {
+    return (
+      <div>
+        time: {this.state.date.toLocaleTimeString()}
+        count: {this.state.count}
+        <button onClick={() => this.countPlus()}>+1</button>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<LifeCycleComponent />, document.getElementById("root"));
