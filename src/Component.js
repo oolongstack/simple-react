@@ -61,7 +61,7 @@ export class Component {
     // 更新机制
     this.updater.addState(partialState);
   }
-  update() {
+  update(prevProps, prevState) {
     // 类组件真正的更新逻辑
     let oldVNode = this.oldVNode;
     let oldDOM = findDomByVNode(oldVNode);
@@ -77,6 +77,9 @@ export class Component {
     }
 
     let newVNode = this.render();
+    const snapshot =
+      this.getSnapshotBeforeUpdate &&
+      this.getSnapshotBeforeUpdate(prevProps, prevState);
     updateDomTree(oldVNode, newVNode, oldDOM);
     this.oldVNode = newVNode;
 
