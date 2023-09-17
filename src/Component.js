@@ -26,19 +26,28 @@ class Updater {
       this.lanchUpdate();
     }
   }
-  lanchUpdate() {
+  lanchUpdate(nextProps) {
     // 进行何冰属性
     const { ClassComponentInstance, pendingStates } = this;
-    if (!pendingStates.length) return;
-    ClassComponentInstance.state = pendingStates.reduce(
-      (preState, newState) => {
-        return { ...preState, ...newState };
-      },
-      ClassComponentInstance.state
-    );
+    if (!pendingStates.length && !nextProps) return;
+    let isShouldUpdate = true;
+    const nextState = pendingStates.reduce((preState, newState) => {
+      return { ...preState, ...newState };
+    }, ClassComponentInstance.state);
     this.pendingStates.length = 0;
+
+    // shouldComponentUpdate
+    if (
+      ClassComponentInstance.shouldComponentUpdate &&
+      !ClassComponentInstance.shouldComponentUpdate(nextProps, nextState)
+    ) {
+      isShouldUpdate = false;
+    }
+
+    ClassComponentInstance.state = nextState;
+    if (nextProps) ClassComponentInstance.props = nextProps;
     // 调用更新
-    ClassComponentInstance.update();
+    if (isShouldUpdate) ClassComponentInstance.update();
   }
 }
 export class Component {
@@ -56,12 +65,22 @@ export class Component {
     // 类组件真正的更新逻辑
     let oldVNode = this.oldVNode;
     let oldDOM = findDomByVNode(oldVNode);
+
+    // static属性
+    if (this.constructor.getDerivedStateFromProps) {
+      const newState = this.constructor.getDerivedStateFromProps(
+        this.props,
+        this.state
+      );
+
+      this.state = { ...this.state, ...newState };
+    }
+
     let newVNode = this.render();
     updateDomTree(oldVNode, newVNode, oldDOM);
     this.oldVNode = newVNode;
 
     // componentDidUpdate
-
     if (this.componentDidUpdate) {
       this.componentDidUpdate(this.props, this.state);
     }
