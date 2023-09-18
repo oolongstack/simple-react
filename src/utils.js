@@ -15,3 +15,13 @@ export function toVNode(node) {
       }
     : node;
 }
+
+export function deepClone(data) {
+  if (!data) return null;
+  // 简便方法 使用JSON方法
+  return JSON.parse(JSON.stringify(data));
+}
+
+export function getType(obj) {
+  const toString = Object.prototype.toString;
+}

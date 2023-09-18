@@ -1,4 +1,5 @@
 import { updateDomTree, findDomByVNode } from "./react-dom";
+import { deepClone } from "./utils";
 export let updateQueue = {
   isBatch: false,
   updaters: new Set(),
@@ -31,6 +32,9 @@ class Updater {
     const { ClassComponentInstance, pendingStates } = this;
     if (!pendingStates.length && !nextProps) return;
     let isShouldUpdate = true;
+
+    const prevProps = deepClone(ClassComponentInstance.props);
+    const prevState = deepClone(ClassComponentInstance.state);
     const nextState = pendingStates.reduce((preState, newState) => {
       return { ...preState, ...newState };
     }, ClassComponentInstance.state);
@@ -47,7 +51,7 @@ class Updater {
     ClassComponentInstance.state = nextState;
     if (nextProps) ClassComponentInstance.props = nextProps;
     // 调用更新
-    if (isShouldUpdate) ClassComponentInstance.update();
+    if (isShouldUpdate) ClassComponentInstance.update(prevProps, prevState);
   }
 }
 export class Component {
@@ -85,7 +89,7 @@ export class Component {
 
     // componentDidUpdate
     if (this.componentDidUpdate) {
-      this.componentDidUpdate(this.props, this.state);
+      this.componentDidUpdate(this.props, this.state, snapshot);
     }
   }
 }
