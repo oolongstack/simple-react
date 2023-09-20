@@ -1,4 +1,10 @@
-import { REACT_ELEMENT, REACT_FORWARD_REF, toVNode } from "./utils";
+import {
+  REACT_ELEMENT,
+  REACT_FORWARD_REF,
+  toVNode,
+  shallowEqual,
+  REACT_MEMO,
+} from "./utils";
 import { Component } from "./Component";
 function createElement(type, properties, children) {
   let key = properties.key || null;
@@ -35,11 +41,38 @@ function forwardRef(render) {
     render,
   };
 }
+
+class PureComponent extends Component {
+  shouldComponentUpdate(nextProps, nextState) {
+    // 浅比较
+    // 只要state 或者 props 有一个不是浅相等 就返回true 也就是重新渲染组件
+    return (
+      !shallowEqual(this.props, nextProps) ||
+      !shallowEqual(this.state, nextState)
+    );
+  }
+}
+
+/**
+ *
+ * @param {*} type 组件类型
+ * @param {*} compare 自定义对比函数
+ */
+function memo(type, compare) {
+  return {
+    $$typeof: REACT_MEMO,
+    type,
+    compare,
+  };
+}
+
 const React = {
   createElement,
   Component,
+  PureComponent,
   createRef,
   forwardRef,
+  memo,
 };
 
 export default React;

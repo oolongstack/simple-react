@@ -41,6 +41,7 @@ class Updater {
     this.pendingStates.length = 0;
 
     // shouldComponentUpdate
+
     if (
       ClassComponentInstance.shouldComponentUpdate &&
       !ClassComponentInstance.shouldComponentUpdate(nextProps, nextState)

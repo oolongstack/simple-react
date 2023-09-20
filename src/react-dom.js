@@ -3,7 +3,9 @@ import {
   MOVE,
   REACT_ELEMENT,
   REACT_FORWARD_REF,
+  REACT_MEMO,
   REACT_TEXT,
+  shallowEqual,
 } from "./utils";
 import { addEvent } from "./event";
 function render(VNode, containerDOM) {
@@ -20,7 +22,13 @@ function mount(VNode, containerDOM) {
 
 function createDOM(VNode) {
   const { type, props, ref } = VNode;
+
   let dom;
+
+  // memo 包裹的函数组件
+  if (type && type.$$typeof === REACT_MEMO) {
+    return getDomByMemoFunctionComponent(VNode);
+  }
 
   // 类组件
   if (
@@ -66,7 +74,8 @@ function getDomByFunctionComponent(VNode) {
   let { type, props } = VNode;
   let renderVNode = type(props);
   if (!renderVNode) return;
-  return createDOM(renderVNode);
+  VNode.oldRenderVNode = renderVNode;
+  return (VNode.dom = createDOM(renderVNode));
 }
 
 function getDomByClassComponent(VNode) {
@@ -79,6 +88,7 @@ function getDomByClassComponent(VNode) {
   VNode.classInstacne = instance;
   instance.oldVNode = renderVNode;
   const dom = createDOM(renderVNode);
+  VNode.dom = dom;
 
   if (instance.componentDidMount) {
     instance.componentDidMount();
@@ -92,9 +102,19 @@ function getDomByForwardRefFunction(VNode) {
 
   const renderVnode = render(props, ref);
   if (!renderVnode) return null;
-  return createDOM(renderVnode);
+  VNode.oldRenderVNode = renderVnode;
+  return (VNode.dom = createDOM(renderVnode));
 }
+function getDomByMemoFunctionComponent(VNode) {
+  const { type, props } = VNode;
 
+  const renderVNode = type.type(props);
+
+  if (!renderVNode) return null;
+
+  VNode.oldRenderVNode = renderVNode;
+  return (VNode.dom = createDOM(renderVNode));
+}
 function setPropsForDOM(dom, VNodeProps = {}) {
   if (!dom) return;
   for (const key in VNodeProps) {
@@ -176,6 +196,7 @@ function deepDOMDiff(oldVNode, newVNode) {
       typeof oldVNode.type === "function" && oldVNode.type.IS_CLASS_COMPONENT, // 类组件
     FUNCTION_COMPONENT: typeof oldVNode.type === "function", // 函数组件
     TEXT: oldVNode.type === REACT_TEXT,
+    MEMO: oldVNode.type.$$typeof === REACT_MEMO,
   };
 
   const DIFF_TYPE = Object.keys(diffTypeMap).filter(
@@ -204,6 +225,9 @@ function deepDOMDiff(oldVNode, newVNode) {
       newVNode.dom = findDomByVNode(oldVNode);
       newVNode.dom.textContent = newVNode.props.text;
       break;
+    case "MEMO":
+      updateMemoFunctionComponent(oldVNode, newVNode);
+      break;
     default:
       break;
   }
@@ -215,12 +239,30 @@ function updateClassComponent(oldVNode, newVNode) {
   classInstacne.updater.lanchUpdate(newVNode.props);
 }
 function updateFunctionComponent(oldVNode, newVNode) {
-  const oldDOM = findDomByVNode(oldVNode);
+  const oldDOM = (newVNode.dom = findDomByVNode(oldVNode));
   if (!oldDOM) return;
   const { type, props } = newVNode;
   const newRenderVNode = type(props);
   updateDomTree(oldVNode.oldRenderVNode, newRenderVNode, oldDOM);
   newVNode.oldRenderVNode = newRenderVNode;
+}
+
+function updateMemoFunctionComponent(oldVNode, newVNode) {
+  const { type } = oldVNode;
+
+  const compare = type.compare || shallowEqual;
+  if (compare) {
+    // 更新函数组件
+    if (!compare(oldVNode.props, newVNode.props)) {
+      const oldDOM = (newVNode.dom = findDomByVNode(oldVNode));
+      const { type } = newVNode;
+      const renderVNode = type.type(newVNode.props);
+      updateDomTree(oldVNode.oldRenderVNode, renderVNode, oldDOM);
+      newVNode.oldRenderVNode = renderVNode;
+    } else {
+      newVNode.oldRenderVNode = oldVNode.oldRenderVNode;
+    }
+  }
 }
 
 // dom-diff
