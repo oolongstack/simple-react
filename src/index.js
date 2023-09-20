@@ -1,63 +1,18 @@
-import React from "./react";
+import React, { useState } from "./react";
 import ReactDOM from "./react-dom";
 
-// PureComponent
-class Parent extends React.Component {
-  state = {
-    name: "",
-    address: "",
-  };
-  setName(name) {
-    this.setState({ name });
-  }
-  setAddress(address) {
-    this.setState({ address });
-  }
-  render() {
-    console.log("father render");
-    return (
-      <div>
-        <label>
-          Name{": "}
-          <input
-            value={this.state.name}
-            onInput={(e) => this.setName(e.target.value)}
-          />
-        </label>
-        <label>
-          Address{": "}
-          <input
-            value={this.state.address}
-            onInput={(e) => this.setAddress(e.target.value)}
-          />
-        </label>
-        <MemoFunc name={this.state.name} />
-      </div>
-    );
-  }
-}
+function Counter(props) {
+  const [count, setCount] = useState(0);
 
-class Greeting extends React.PureComponent {
-  render() {
-    console.log("Greeting was rendered at", new Date().toLocaleTimeString());
-    return (
-      <h3>
-        Hello{this.props.name && ", "}
-        {this.props.name}!
-      </h3>
-    );
-  }
-}
-
-const MemoFunc = React.memo((props) => {
-  console.log("Greeting was rendered at", new Date().toLocaleTimeString());
+  const [count1, setCount1] = useState(100);
   return (
-    <h3>
-      Hello{props.name && ", "}
-      {props.name}!
-    </h3>
+    <div>
+      <p>You clicked {count} times</p>
+      <p>count1: {count1}</p>
+      <button onClick={() => setCount(count + 1)}>Click me</button>
+      <button onClick={() => setCount1(count1 + 100)}>setCount1</button>
+    </div>
   );
-});
-console.log(MemoFunc);
+}
 
-ReactDOM.render(<Parent />, document.getElementById("root"));
+ReactDOM.render(<Counter />, document.getElementById("root"));

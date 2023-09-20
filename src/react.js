@@ -76,3 +76,4 @@ const React = {
 };
 
 export default React;
+export * from "./hooks";

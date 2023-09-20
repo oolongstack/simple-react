@@ -8,11 +8,20 @@ import {
   shallowEqual,
 } from "./utils";
 import { addEvent } from "./event";
+import { resetHookIndex } from "./hooks";
+export let emitUpdateForHooks;
+
 function render(VNode, containerDOM) {
   console.log("all VNode: ", VNode);
   // 将虚拟DOM转化为真实DOM
   // 真实DOM挂载到容器中
   mount(VNode, containerDOM);
+  emitUpdateForHooks = () => {
+    // reset hook index
+    resetHookIndex();
+    // update dom tree
+    updateDomTree(VNode, VNode, findDomByVNode(VNode));
+  };
 }
 
 function mount(VNode, containerDOM) {
